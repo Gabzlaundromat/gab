@@ -777,9 +777,10 @@ export class DatabaseService {
         data: service
       };
     } catch (error: any) {
+      console.error(`Service not found: ${serviceId}`, error);
       return {
         success: false,
-        error: 'Service not found'
+        error: `Service with ID ${serviceId} not found`
       };
     }
   }

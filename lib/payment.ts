@@ -48,13 +48,15 @@ export interface PaymentVerificationResponse {
   };
 }
 
+console.log(process.env.NEXT_PUBLIC_PAYSTACK_SECRET_KEY, 'paystackConfig');
+
 export class PaymentService {
   private config: PaystackConfig;
 
   constructor() {
     this.config = {
       publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
-      secretKey: process.env.PAYSTACK_SECRET_KEY || '',
+      secretKey: process.env.NEXT_PUBLIC_PAYSTACK_SECRET_KEY || '',
       baseUrl: 'https://api.paystack.co'
     };
 
