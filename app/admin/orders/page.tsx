@@ -9,9 +9,9 @@ import { Order, OrderStatus } from '@/lib/types';
 import { formatNairaFromKobo } from '@/lib/validations';
 
 export default function AdminOrdersPage() {
-  const { user, isAuthenticated, userRole } = useAuth();
+  const { user, isAuthenticated, isAdmin } = useAuth();
   const router = useRouter();
-  
+
   const [orders, setOrders] = useState<Order[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -20,13 +20,13 @@ export default function AdminOrdersPage() {
   const [dateFilter, setDateFilter] = useState('');
 
   useEffect(() => {
-    if (!isAuthenticated || userRole !== 'admin') {
+    if (!isAuthenticated || !isAdmin) {
       router.push('/admin/login');
       return;
     }
 
     loadOrders();
-  }, [isAuthenticated, userRole, router]);
+  }, [isAuthenticated, isAdmin, router]);
 
   useEffect(() => {
     filterOrders();
@@ -180,7 +180,7 @@ export default function AdminOrdersPage() {
     }
   };
 
-  if (!isAuthenticated || userRole !== 'admin') {
+  if (!isAuthenticated || !isAdmin) {
     return null;
   }
 
@@ -217,6 +217,12 @@ export default function AdminOrdersPage() {
                 className="text-gray-600 hover:text-gray-900"
               >
                 Services
+              </Link>
+              <Link
+                href="/admin/orders/new"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md text-sm font-medium"
+              >
+                New Order
               </Link>
             </div>
           </div>

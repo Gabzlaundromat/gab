@@ -15,9 +15,9 @@ interface CustomerWithStats extends User {
 }
 
 export default function AdminCustomersPage() {
-  const { user, isAuthenticated, userRole } = useAuth();
+  const { user, isAuthenticated, isAdmin } = useAuth();
   const router = useRouter();
-  
+
   const [customers, setCustomers] = useState<CustomerWithStats[]>([]);
   const [filteredCustomers, setFilteredCustomers] = useState<CustomerWithStats[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -25,13 +25,13 @@ export default function AdminCustomersPage() {
   const [sortBy, setSortBy] = useState<'name' | 'orders' | 'spent' | 'recent'>('name');
 
   useEffect(() => {
-    if (!isAuthenticated || userRole !== 'admin') {
+    if (!isAuthenticated || !isAdmin) {
       router.push('/admin/login');
       return;
     }
 
     loadCustomers();
-  }, [isAuthenticated, userRole, router]);
+  }, [isAuthenticated, isAdmin, router]);
 
   useEffect(() => {
     filterAndSortCustomers();
@@ -40,15 +40,14 @@ export default function AdminCustomersPage() {
   const loadCustomers = async () => {
     try {
       // Get all customers (this would need pagination in production)
+      // The `users` collection only ever contains customers by design —
+      // staff/admin accounts live in the separate `admin-users` collection.
       const customersResponse = await databaseService.getAllUsers();
-      
+
       if (customersResponse.success && customersResponse.data) {
-        // Filter only customer users (not admin users)
-        const customerUsers = customersResponse.data.filter(user => user.role === 'customer');
-        
         // Get order statistics for each customer
         const customersWithStats = await Promise.all(
-          customerUsers.map(async (customer) => {
+          customersResponse.data.map(async (customer) => {
             const ordersResponse = await databaseService.getOrdersByCustomer(customer.$id);
             
             let totalOrders = 0;
@@ -92,10 +91,10 @@ export default function AdminCustomersPage() {
     // Filter by search term
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter(customer => 
-        customer.name.toLowerCase().includes(searchLower) ||
+      filtered = filtered.filter(customer =>
+        `${customer.firstName} ${customer.lastName}`.toLowerCase().includes(searchLower) ||
         customer.email.toLowerCase().includes(searchLower) ||
-        customer.phoneNumber.includes(searchTerm)
+        customer.phone.number.includes(searchTerm)
       );
     }
 
@@ -103,7 +102,7 @@ export default function AdminCustomersPage() {
     filtered.sort((a, b) => {
       switch (sortBy) {
         case 'name':
-          return a.name.localeCompare(b.name);
+          return `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`);
         case 'orders':
           return b.totalOrders - a.totalOrders;
         case 'spent':
@@ -137,7 +136,7 @@ export default function AdminCustomersPage() {
     return phone.replace(/(\+234)(\d{3})(\d{4})(\d{4})/, '$1 $2 $3 $4');
   };
 
-  if (!isAuthenticated || userRole !== 'admin') {
+  if (!isAuthenticated || !isAdmin) {
     return null;
   }
 
@@ -174,6 +173,12 @@ export default function AdminCustomersPage() {
                 className="text-gray-600 hover:text-gray-900"
               >
                 Services
+              </Link>
+              <Link
+                href="/admin/orders/new"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md text-sm font-medium"
+              >
+                New Order
               </Link>
             </div>
           </div>
@@ -343,24 +348,24 @@ export default function AdminCustomersPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
                         <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center font-semibold">
-                          {customer.name.charAt(0).toUpperCase()}
+                          {customer.firstName.charAt(0).toUpperCase()}
                         </div>
-                        
+
                         <div>
                           <div className="flex items-center space-x-3">
                             <h3 className="text-lg font-semibold text-gray-900">
-                              {customer.name}
+                              {customer.firstName} {customer.lastName}
                             </h3>
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${tier.color}`}>
                               {tier.icon} {tier.tier}
                             </span>
                           </div>
-                          
+
                           <div className="mt-1 text-sm text-gray-600">
                             <p>📧 {customer.email}</p>
-                            <p>📱 {formatPhoneNumber(customer.phoneNumber)}</p>
+                            <p>📱 {formatPhoneNumber(customer.phone.number)}</p>
                             <p>
-                              📍 {customer.primaryAddress?.area || 'No address'} | 
+                              📍 {customer.addresses?.[0]?.area || 'No address'} |
                               📅 Joined {new Date(customer.$createdAt).toLocaleDateString('en-NG', {
                                 year: 'numeric',
                                 month: 'short',

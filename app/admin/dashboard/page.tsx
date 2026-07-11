@@ -9,7 +9,7 @@ import { Order, OrderStatus, Service } from '@/lib/types';
 import { formatNairaFromKobo } from '@/lib/validations';
 
 export default function AdminDashboardPage() {
-  const { user, isAuthenticated, userRole, logout } = useAuth();
+  const { user, isAuthenticated, isAdmin, logout } = useAuth();
   const router = useRouter();
   
   const [orders, setOrders] = useState<Order[]>([]);
@@ -24,13 +24,13 @@ export default function AdminDashboardPage() {
   });
 
   useEffect(() => {
-    if (!isAuthenticated || userRole !== 'admin') {
+    if (!isAuthenticated || !isAdmin) {
       router.push('/admin/login');
       return;
     }
 
     loadDashboardData();
-  }, [isAuthenticated, userRole, router]);
+  }, [isAuthenticated, isAdmin, router]);
 
   const loadDashboardData = async () => {
     try {
@@ -132,7 +132,7 @@ export default function AdminDashboardPage() {
     router.push('/admin/login');
   };
 
-  if (!isAuthenticated || userRole !== 'admin' || !user) {
+  if (!isAuthenticated || !isAdmin || !user) {
     return null;
   }
 
