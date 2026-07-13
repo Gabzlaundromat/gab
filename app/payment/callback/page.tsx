@@ -1,12 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { paymentService } from '@/lib/payment';
 import { databaseService } from '@/lib/database';
 
 export default function PaymentCallbackPage() {
+  return (
+    <Suspense fallback={null}>
+      <PaymentCallbackPageContent />
+    </Suspense>
+  );
+}
+
+function PaymentCallbackPageContent() {
   const [isVerifying, setIsVerifying] = useState(true);
   const [verificationResult, setVerificationResult] = useState<{
     success: boolean;

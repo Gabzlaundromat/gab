@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/context/AuthContext';
@@ -16,6 +16,14 @@ interface OrderDetailsPageProps {
 }
 
 export default function OrderDetailsPage({ params }: OrderDetailsPageProps) {
+  return (
+    <Suspense fallback={null}>
+      <OrderDetailsPageContent params={params} />
+    </Suspense>
+  );
+}
+
+function OrderDetailsPageContent({ params }: OrderDetailsPageProps) {
   const { user, isAuthenticated } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
